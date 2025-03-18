@@ -35,3 +35,38 @@ kubectl run alpine-sleeper-cka15-arch --image=alpine --command -- sleep 7200
 Verify the pod:
 
 kubectl get pod alpine-sleeper-cka15-arch
+
+
+---
+
+## Question 2
+
+![image](https://github.com/user-attachments/assets/38944830-940b-43a9-ae54-8d82a0775270)
+
+**Weight:** 8
+
+**SECTION:** ARCHITECTURE, INSTALLATION AND MAINTENANCE
+
+For this question, please set the context to `cluster1` by running:
+
+```bash
+kubectl config use-context cluster1
+
+Solution:
+
+Edit the ClusterRole:
+kubectl edit clusterrole green-role-cka22-arch
+
+Modify the rules section to allow only get on namespaces:
+
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get"]
+
+Verify the ClusterRole:
+
+kubectl get clusterrole green-role-cka22-arch -o yaml
+
+Ensure the rules match the updated configuration.
+
