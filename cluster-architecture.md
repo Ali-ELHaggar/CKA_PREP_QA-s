@@ -41,7 +41,7 @@ kubectl get pod alpine-sleeper-cka15-arch
 
 ## Question 2
 
-![image](https://github.com/user-attachments/assets/38944830-940b-43a9-ae54-8d82a0775270)
+![image](https://github.com/user-attachments/assets/caded04e-e297-4605-840b-c5d3b562904d)
 
 **Weight:** 8
 
