@@ -122,4 +122,142 @@ Bash
 kubectl logs kube-controller-manager-cluster4-controlplane -n kube-system
 Verify that the controller manager is running without errors.
 
+---
 
+![image](https://github.com/user-attachments/assets/4215a22d-f190-4d92-94c5-c4281b251b66)
+
+Solution
+Let's check the POD status
+kubectl get pod --context=cluster2
+
+So you will see that yello-cka20-trb pod is in Pending state. Let's check out the relevant events.
+
+kubectl get event --field-selector involvedObject.name=yello-cka20-trb --context=cluster2
+
+You will see some errors like:
+
+Warning   FailedScheduling   pod/yello-cka20-trb   0/2 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/master: }, 1 node(s) had untolerated taint {node: node01}. preemption: 0/2 nodes are available: 2 Preemption is not helpful for scheduling.
+
+Notice this error 1 node(s) had untolerated taint {node: node01} so we can see that one of nodes have taints applied. We don't want to remove the node taints and we are not going to re-create the POD so let's look into the POD config if its using any other toleration settings.
+
+kubectl get pod yello-cka20-trb --context=cluster2 -o yaml
+
+You will notice this in the output
+
+tolerations:
+  - effect: NoSchedule
+    key: node
+    operator: Equal
+    value: cluster2-node01
+
+Here notice that the value for key node is cluster2-node01 but the node has different value applied i.e node01 so let's update the taints values for the node as needed.
+
+kubectl --context=cluster2 taint nodes cluster2-node01 node=cluster2-node01:NoSchedule --overwrite=true
+
+Let's check the POD status again
+
+kubectl get pod --context=cluster2
+
+It should be in Running state now.
+
+---
+![image](https://github.com/user-attachments/assets/ea826222-3e58-4639-88b0-da74442d3103)
+
+Solution
+Find out the name of the DB POD:
+kubectl get pod
+
+Check the DB POD logs:
+kubectl logs <pod-name>
+
+You might see something like as below which is not that helpful:
+
+Error from server (BadRequest): container "db" in pod "db-deployment-cka05-trb-7457c469b7-zbvx6" is waiting to start: CreateContainerConfigError
+
+So let's look into the kubernetes events for this pod:
+
+kubectl get event --field-selector involvedObject.name=<pod-name>
+
+You will see some errors as below:
+
+Error: couldn't find key db in Secret default/db-cka05-trb
+
+Now let's look into all secrets:
+
+kubectl get secrets db-root-pass-cka05-trb -o yaml
+kubectl get secrets db-user-pass-cka05-trb -o yaml
+kubectl get secrets db-cka05-trb -o yaml
+
+Now let's look into the deployment.
+
+Edit the deployment
+kubectl edit deployment db-deployment-cka05-trb -o yaml
+
+You will notice that some of the keys are different what are reffered in the deployment.
+
+Change some env keys: db to database , db-user to username and db-password to password
+Change a secret reference: db-user-cka05-trb to db-user-pass-cka05-trb
+Finally save the changes.
+
+---
+
+![image](https://github.com/user-attachments/assets/94d6b78e-92ec-4efa-827d-9753fbc8b288)
+
+Solution
+Check current status of the deployment
+
+kubectl get deploy 
+
+Let's check deployment status
+
+kubectl get deploy black-cka25-trb -o yaml
+
+Under status: you will see message: Deployment is paused so seems like deployment was paused, let check the rollout status
+
+kubectl rollout status deployment black-cka25-trb
+
+You will see this message
+
+Waiting for deployment "black-cka25-trb" rollout to finish: 0 out of 1 new replicas have been updated...
+
+So, let's resume
+
+kubectl rollout resume deployment black-cka25-trb
+
+Check again the status of the deployment
+
+kubectl get deploy 
+
+It should be good now.
+
+---
+
+![image](https://github.com/user-attachments/assets/3f10401f-81dd-42a0-937a-61ced7fefab4)
+
+Solution
+Check the purple-curl-cka27-trb pod logs
+
+kubectl logs purple-curl-cka27-trb
+
+You will see some logs as below
+
+Not able to connect to the nginx app on http://purple-svc-cka27-trb
+
+Now to debug let's try to access this app from within the purple-app-cka27-trb pod
+
+kubectl exec -it purple-app-cka27-trb -- bash
+curl http://purple-svc-cka27-trb
+exit
+
+You will notice its stuck, so app is not reachable. Let's look into the service to see its configured correctly.
+
+kubectl edit svc purple-svc-cka27-trb
+
+Under ports: -> port: and targetPort: is set to 8080 but nginx default port is 80 so change 8080 to 80 and save the changes
+Let's check the logs now
+
+kubectl logs purple-curl-cka27-trb
+
+You will see Thank you for using nginx. in the output now.
+
+---
