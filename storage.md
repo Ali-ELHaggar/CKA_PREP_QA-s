@@ -1,4 +1,4 @@
-# Storage Mock Exam Questions
+![image](https://github.com/user-attachments/assets/73e5f306-63ca-4ab8-b2b9-6ba02f23effd)# Storage Mock Exam Questions
 
 This file contains mock exam questions and answers related to the Storage domain of the Certified Kubernetes Administrator (CKA) exam.
 
@@ -55,3 +55,20 @@ Bash
 
 kubectl describe pvc papaya-pvc-cka09-str
 Ensure that the Capacity and Status are updated to 80Mi and Bound respectively.
+```
+---
+
+![image](https://github.com/user-attachments/assets/05753cbe-5817-469c-959e-ecc240e50d43)
+
+Solution
+Create a yaml template as below:
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: banana-sc-cka08-str
+provisioner: kubernetes.io/no-provisioner
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+
+Apply the template:
+kubectl apply -f <template-file-name>.yaml
